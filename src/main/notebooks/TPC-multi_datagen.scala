@@ -1,21 +1,22 @@
 // Databricks notebook source
 // Multi TPC- H and DS generator and database importer using spark-sql-perf, typically to generate parquet files in S3/blobstore objects
-val benchmarks = Seq("TPCDS", "TPCH") // Options: TCPDS", "TPCH"
-val scaleFactors = Seq("1", "10", "100", "1000", "10000") // "1", "10", "100", "1000", "10000" list of scale factors to generate and import
+val scaleFactors = Seq("100") // "1", "10", "100", "1000", "10000" list of scale factors to generate and import
+val waitWorker = 0
+val workers: Int = 1 //spark.conf.get("spark.databricks.clusterUsageTags.clusterTargetWorkers").toInt //number of nodes, assumes one executor per node
+val benchmarks = Seq("TPCH") // Options: TCPDS", "TPCH"
 
-val baseLocation = s"s3a://mybucket" // S3 bucket, blob, or local root path
-val baseDatagenFolder = "/tmp"  // usually /tmp if enough space is available for datagen files
+val baseLocation = "/data1/liangliang/benchmark/data" // S3 bucket, blob, or local root path
+val baseDatagenFolder = "/data1/liangliang/benchmark/data/tmp"  // usually /tmp if enough space is available for datagen files
 
 // Output file formats
 val fileFormat = "parquet" // only parquet was tested
 val shuffle = true // If true, partitions will be coalesced into a single file during generation up to spark.sql.files.maxRecordsPerFile (if set)
-val overwrite = false //if to delete existing files (doesn't check if results are complete on no-overwrite)
+val overwrite = true //if to delete existing files (doesn't check if results are complete on no-overwrite)
 
 // Generate stats for CBO
 val createTableStats = true
 val createColumnStats = true
 
-val workers: Int = spark.conf.get("spark.databricks.clusterUsageTags.clusterTargetWorkers").toInt //number of nodes, assumes one executor per node
 val cores: Int = Runtime.getRuntime.availableProcessors.toInt //number of CPU-cores
 
 val dbSuffix = "" // set only if creating multiple DBs or source file folders with different settings, use a leading _
@@ -63,7 +64,7 @@ def waitForWorkers(requiredWorkers: Int, tries: Int) : Unit = {
   }
   throw new Exception(s"Timed out waiting for workers to be ready after ${tries}s.")
 }
-waitForWorkers(targetWorkers, 3600) //wait up to an hour
+waitForWorkers(targetWorkers, waitWorker)
 
 // COMMAND ----------
 

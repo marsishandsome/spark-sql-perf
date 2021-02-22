@@ -1,3 +1,40 @@
+# Spark Pqrquet TPCH-100 Performance test with Spark Standalone Cluster
+
+## Generate Parquet Test file
+
+generate TPCH-100 Parquet Format test data in one spark worker using local mode
+
+```
+./bin/spark-shell --master local[*] --driver-memory 20G
+
+:load spark-sql-perf/src/main/notebooks/TPC-multi_datagen.scala
+```
+
+copy the Parquet Format test data to other spark workers
+
+```
+scp -r data/tpch/sf100_parquet/ worker1:data/tpch/
+scp -r data/tpch/sf100_parquet/ worker2:data/tpch/
+```
+
+## Start Benchmark
+
+start `spark-shell` using all the resources
+
+```
+./bin/spark-shell --master spark://${master}:7077 \
+--driver-memory 4G \
+--total-executor-cores 120 \
+--executor-cores 40 \
+--executor-memory 60G
+```
+
+start to run benchmark
+
+```
+:load spark-sql-perf/src/main/notebooks/tpch_run.scala
+```
+
 # Spark SQL Performance Tests
 
 [![Build Status](https://travis-ci.org/databricks/spark-sql-perf.svg)](https://travis-ci.org/databricks/spark-sql-perf)
